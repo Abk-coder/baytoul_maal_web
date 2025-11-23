@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AssociationMember {
+  id         String   @id @default(cuid())
+  name       String
+  role       String
+  commission String?
+  bio        String?
+  photoUrl   String?
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String
+  type        MediaType @default(ARTICLE)
+  mediaUrl    String?
+  coverImage  String?
+  publishedAt DateTime?
+  tags        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Course {
+  id           String      @id @default(cuid())
+  title        String
+  description  String
+  level        CourseLevel @default(BEGINNER)
+  thumbnailUrl String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  instructor   String?
+  lessons      Lesson[]
+  quizzes      Quiz[]
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  title     String
+  videoUrl  String?
+  content   String?
+  position  Int      @default(0)
+  courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Quiz {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  courseId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  questions   Question[]
+  course      Course?    @relation(fields: [courseId], references: [id])
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  text        String
+  quizId      String
+  order       Int      @default(0)
+  explanation String?
+  answers     Answer[]
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  text       String
+  isCorrect  Boolean  @default(false)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model Event {
+  id            String              @id @default(cuid())
+  title         String
+  slug          String              @unique
+  description   String
+  startDate     DateTime
+  endDate       DateTime?
+  time          String?
+  location      String
+  address       String?
+  imageUrl      String?
+  videoUrl      String?
+  organizers    String?
+  capacity      Int?
+  registered    Int                 @default(0)
+  category      String?
+  isPublished   Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  galleryUrls   String[]            @default([])
+  registrations EventRegistration[]
+}
+
+model EventRegistration {
+  id        String   @id @default(cuid())
+  eventId   String
+  firstName String
+  lastName  String
+  phone     String
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model Settings {
+  id            String   @id @default(cuid())
+  siteName      String   @default("Baytul Maal")
+  siteUrl       String   @default("https://baytulmaal.sn")
+  description   String?
+  email         String?
+  phone         String?
+  address       String?
+  facebookUrl   String?
+  instagramUrl  String?
+  youtubeUrl    String?
+  bankName      String?
+  accountNumber String?
+  mobilePayment String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  whatsappUrl   String?
+  telegramUrl   String?
+  tiktokUrl     String?
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  USER
+}
+
+enum MediaType {
+  VIDEO
+  ARTICLE
+  AUDIO
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
